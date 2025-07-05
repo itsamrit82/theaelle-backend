@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail } from '../services/emailService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,7 +47,15 @@ export const signup = (req, res) => {
         profilePic
       });
 
-      console.log('✅ User created:', email);
+      // Send welcome email
+      try {
+        const emailResult = await sendWelcomeEmail(email, name);
+        // Welcome email sent
+      } catch (emailError) {
+        console.log('⚠️ Welcome email failed:', emailError.message);
+      }
+
+      // User created successfully
 
       const token = generateToken(user);
       res.status(201).json({
@@ -146,8 +155,16 @@ export const forgotPassword = async (req, res) => {
 
     const resetUrl = `https://theaelle.store/reset-password?token=${resetToken}`;
     
-    console.log('Password reset link:', resetUrl);
-    res.json({ message: 'Password reset link generated', resetUrl });
+    // Send password reset email
+    try {
+      const emailResult = await sendPasswordResetEmail(email, resetUrl);
+      res.json({ message: 'Password reset link sent to your email.' });
+    } catch (emailError) {
+      console.error('⚠️ Reset email failed:', emailError.message);
+      res.status(500).json({ 
+        error: 'Failed to send password reset email. Please try again.'
+      });
+    }
   } catch (err) {
     console.error('Forgot password error:', err);
     res.status(500).json({ error: 'Failed to generate reset link' });
@@ -208,12 +225,20 @@ export const sendEmailVerification = async (req, res) => {
 
     const verificationUrl = `https://theaelle.store/signup?token=${verificationToken}`;
     
-    console.log('Email verification link:', verificationUrl);
-    res.json({ 
-      message: 'Verification link generated',
-      verificationUrl,
-      success: true
-    });
+    // Send verification email
+    try {
+      const emailResult = await sendVerificationEmail(email, verificationUrl);
+      res.json({ 
+        message: 'Verification link sent to your email. Please check your inbox.',
+        success: true
+      });
+    } catch (emailError) {
+      console.error('⚠️ Verification email failed:', emailError.message);
+      res.status(500).json({ 
+        error: 'Failed to send verification email. Please try again.',
+        success: false
+      });
+    }
   } catch (err) {
     console.error('Email verification error:', err);
     res.status(500).json({ error: 'Failed to send verification email' });
