@@ -313,3 +313,56 @@ export const getMe = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch user data' });
   }
 };
+
+// CHANGE PASSWORD
+export const changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    console.log('Password changed successfully for user:', user.email);
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+};
+
+// CHECK EMAIL EXISTS
+export const checkEmailExists = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const existingUser = await User.findOne({ email });
+    res.json({ exists: !!existingUser });
+  } catch (err) {
+    console.error('Error checking email:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
