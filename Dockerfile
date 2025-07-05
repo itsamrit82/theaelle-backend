@@ -1,4 +1,4 @@
-# Use Node.js 18 Alpine for smaller image size
+# Use Node.js 18 Alpine
 FROM node:18-alpine
 
 # Set working directory
@@ -20,4 +20,4 @@ RUN mkdir -p uploads
 EXPOSE 5000
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "index.js"]
