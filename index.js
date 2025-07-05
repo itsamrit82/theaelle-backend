@@ -20,7 +20,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: [process.env.CLIENT_URL || 'http://localhost:3000', 'https://theaelle.shop', 'https://www.theaelle.shop'],
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -57,6 +57,20 @@ app.get('/', (req, res) => {
     message: 'The Aellè API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// API health check
+app.get('/api', (req, res) => {
+  res.json({ 
+    message: 'The Aellè API endpoints are ready',
+    version: '1.0.0',
+    status: 'online',
+    endpoints: {
+      auth: '/api/auth',
+      products: '/api/products',
+      orders: '/api/orders'
+    }
   });
 });
 
