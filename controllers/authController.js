@@ -5,9 +5,7 @@ import bcrypt from 'bcrypt';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { sendWelcomeEmail, sendPasswordResetEmail } from '../utils/emailService.js';
-// Supabase email service available but not imported to prevent crashes
-// import { sendSupabaseWelcomeEmail } from '../utils/supabaseEmailService.js';
+import { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail } from '../utils/supabaseAuth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,10 +50,14 @@ export const signup = (req, res) => {
 
       // Send welcome email
       try {
-        await sendWelcomeEmail(email, name);
-        console.log('✅ Welcome email sent to:', email);
+        const emailResult = await sendWelcomeEmail(email, name);
+        if (emailResult.success) {
+          console.log('✅ Welcome email sent to:', email);
+        } else {
+          console.log('⚠️ Welcome email failed:', emailResult.error);
+        }
       } catch (emailError) {
-        console.log('⚠️ Welcome email failed:', emailError.message);
+        console.log('⚠️ Welcome email error:', emailError.message);
       }
 
       const token = generateToken(user);
@@ -248,39 +250,27 @@ export const sendEmailVerification = async (req, res) => {
     );
 
     // Create verification URL
-    const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/signup?token=${verificationToken}`;
+    const verificationUrl = `${process.env.CLIENT_URL}/signup?token=${verificationToken}`;
     
-    try {
-      // Send verification email via Supabase
-      const { error: emailError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: verificationUrl,
+    // Send verification email via Supabase
+    const emailResult = await sendVerificationEmail(email, verificationUrl);
+    
+    if (emailResult.success) {
+      res.json({ 
+        message: 'Verification link sent to your email. Please check your inbox.',
+        success: true
       });
-
-      if (emailError) {
-        console.log('Supabase email failed, using console fallback:', emailError.message);
-        console.log('\n=== EMAIL VERIFICATION LINK ===');
-        console.log('Copy this link to verify email:');
-        console.log(verificationUrl);
-        console.log('===============================\n');
-        
-        return res.json({ 
-          message: 'Verification link generated. Check server console.',
-          verificationUrl
-        });
-      }
-
-      console.log('Verification email sent to:', email);
-      res.json({ message: 'Verification link sent to your email.' });
-    } catch (emailErr) {
-      console.log('Email failed, using console fallback:', emailErr.message);
+    } else {
+      // Fallback - show link in console and response
       console.log('\n=== EMAIL VERIFICATION LINK ===');
       console.log('Copy this link to verify email:');
       console.log(verificationUrl);
       console.log('===============================\n');
       
       res.json({ 
-        message: 'Verification link generated. Check server console.',
-        verificationUrl
+        message: 'Verification link generated. Check server console for the link.',
+        verificationUrl,
+        success: true
       });
     }
   } catch (err) {
