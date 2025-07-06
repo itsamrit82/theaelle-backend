@@ -304,6 +304,51 @@ export const changePassword = async (req, res) => {
   }
 };
 
+// UPDATE PROFILE
+export const updateProfile = async (req, res) => {
+  const { name, email, mobile, address } = req.body;
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if email is being changed and if it already exists
+    if (email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
+    }
+
+    // Update user fields
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.mobile = mobile || user.mobile;
+    user.address = address || user.address;
+
+    await user.save();
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        address: user.address,
+        profilePic: user.profilePic,
+        role: user.role,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+};
+
 // CHECK EMAIL EXISTS
 export const checkEmailExists = async (req, res) => {
   const { email } = req.body;

@@ -1,6 +1,6 @@
 // File: Server/routes/authRoutes.js
 import express from 'express';
-import { signup, login, getMe, forgotPassword, resetPassword, sendEmailVerification, verifyEmailToken, changePassword, checkEmailExists } from '../controllers/authController.js';
+import { signup, login, getMe, forgotPassword, resetPassword, sendEmailVerification, verifyEmailToken, changePassword, checkEmailExists, updateProfile } from '../controllers/authController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -13,6 +13,7 @@ router.post('/reset-password', resetPassword);
 router.post('/send-verification', sendEmailVerification);
 router.post('/verify-email', verifyEmailToken);
 router.post('/change-password', authMiddleware, changePassword);
+router.put('/update-profile', authMiddleware, updateProfile);
 router.post('/check-email', checkEmailExists); 
 
 export default router;
