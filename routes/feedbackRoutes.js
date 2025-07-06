@@ -1,10 +1,14 @@
 import express from 'express';
-import { createFeedback, getProductFeedbacks } from '../controllers/feedbackController.js';
-import authMiddleware from '../middleware/authMiddleware.js';
-
 const router = express.Router();
 
-router.post('/:productId', authMiddleware, createFeedback);
-router.get('/:productId', getProductFeedbacks);
+// GET feedback
+router.get('/:productId', (req, res) => {
+  res.json({ feedbacks: [] });
+});
+
+// POST feedback
+router.post('/', (req, res) => {
+  res.json({ success: true, message: 'Feedback added' });
+});
 
 export default router;

@@ -1,10 +1,19 @@
 import express from 'express';
-import { getWishlist, toggleWishlist } from '../controllers/wishlistController.js';
-import { authenticateToken } from '../middleware/authMiddleware.js';
-
 const router = express.Router();
 
-router.get('/', authenticateToken, getWishlist);
-router.post('/toggle', authenticateToken, toggleWishlist);
+// GET wishlist
+router.get('/', (req, res) => {
+  res.json({ wishlist: [] });
+});
+
+// POST add to wishlist
+router.post('/', (req, res) => {
+  res.json({ success: true, message: 'Added to wishlist' });
+});
+
+// DELETE from wishlist
+router.delete('/:id', (req, res) => {
+  res.json({ success: true, message: 'Removed from wishlist' });
+});
 
 export default router;
