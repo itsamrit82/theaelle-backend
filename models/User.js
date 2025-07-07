@@ -38,6 +38,17 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Product'
   }],
+  savedAddresses: [{
+    label: { type: String, required: true }, // 'Home', 'Work', etc.
+    fullName: { type: String, required: true },
+    phone: { type: String, required: true },
+    address: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    zipCode: { type: String, required: true },
+    country: { type: String, default: 'India' },
+    isDefault: { type: Boolean, default: false }
+  }],
   resetToken: String,
   resetTokenExpiry: Date,
 }, { 

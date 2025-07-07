@@ -81,3 +81,82 @@ export const toggleWishlistItem = async (req, res) => {
     res.status(500).json({ message: "Server error while toggling wishlist" });
   }
 };
+
+// Address Management
+export const addAddress = async (req, res) => {
+  try {
+    const { label, fullName, phone, address, city, state, zipCode, country, isDefault } = req.body;
+    const user = await User.findById(req.user._id || req.user.id);
+    
+    if (!user) return res.status(404).json({ message: "User not found" });
+    
+    // If this is set as default, remove default from others
+    if (isDefault) {
+      user.savedAddresses.forEach(addr => addr.isDefault = false);
+    }
+    
+    user.savedAddresses.push({
+      label, fullName, phone, address, city, state, zipCode, country: country || 'India', isDefault
+    });
+    
+    await user.save();
+    res.json({ message: "Address added successfully", addresses: user.savedAddresses });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding address" });
+  }
+};
+
+export const getAddresses = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id || req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    
+    res.json({ addresses: user.savedAddresses });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching addresses" });
+  }
+};
+
+export const updateAddress = async (req, res) => {
+  try {
+    const { addressId } = req.params;
+    const { label, fullName, phone, address, city, state, zipCode, country, isDefault } = req.body;
+    const user = await User.findById(req.user._id || req.user.id);
+    
+    if (!user) return res.status(404).json({ message: "User not found" });
+    
+    const addressIndex = user.savedAddresses.findIndex(addr => addr._id.toString() === addressId);
+    if (addressIndex === -1) return res.status(404).json({ message: "Address not found" });
+    
+    // If this is set as default, remove default from others
+    if (isDefault) {
+      user.savedAddresses.forEach(addr => addr.isDefault = false);
+    }
+    
+    user.savedAddresses[addressIndex] = {
+      ...user.savedAddresses[addressIndex],
+      label, fullName, phone, address, city, state, zipCode, country: country || 'India', isDefault
+    };
+    
+    await user.save();
+    res.json({ message: "Address updated successfully", addresses: user.savedAddresses });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating address" });
+  }
+};
+
+export const deleteAddress = async (req, res) => {
+  try {
+    const { addressId } = req.params;
+    const user = await User.findById(req.user._id || req.user.id);
+    
+    if (!user) return res.status(404).json({ message: "User not found" });
+    
+    user.savedAddresses = user.savedAddresses.filter(addr => addr._id.toString() !== addressId);
+    
+    await user.save();
+    res.json({ message: "Address deleted successfully", addresses: user.savedAddresses });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting address" });
+  }
+};
