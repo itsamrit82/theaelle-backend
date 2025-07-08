@@ -1,24 +1,52 @@
+// File: routes/adminRoutes.js
 import express from 'express';
-import User from '../models/User.js';
-import Order from '../models/Order.js';
+import adminMiddleware from '../middleware/adminMiddleware.js';
+import {
+  getAllOrders,
+  updateOrderStatus,
+  getAllProducts,
+  updateProduct,
+  deleteProduct,
+  getRefundRequests,
+  approveRefund,
+  getReturns,
+  approveReturn,
+  getPayments,
+  getDeliveries,
+  updateDeliveryStatus,
+  getAdminStats
+} from '../controllers/adminController.js';
 
 const router = express.Router();
 
-router.get('/stats', async (req, res) => {
-  try {
-    const users = await User.countDocuments({});
-    const orders = await Order.find({});
-    const revenue = orders.reduce((sum, o) => sum + (o.finalAmount || 0), 0);
+// 🔐 Apply admin protection to all routes
+router.use(adminMiddleware);
 
-    res.json({
-      totalUsers: users,
-      totalOrders: orders.length,
-      totalRevenue: revenue
-    });
-  } catch (err) {
-    console.error('Stats error:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+// 📦 Products
+router.get('/products', getAllProducts);
+router.put('/products/:id', updateProduct);
+router.delete('/products/:id', deleteProduct);
+
+// 📦 Orders
+router.get('/orders', getAllOrders);
+router.put('/orders/:id/status', updateOrderStatus);
+
+// 💰 Payments
+router.get('/payments', getPayments);
+
+// 🚚 Delivery
+router.get('/deliveries', getDeliveries);
+router.put('/deliveries/:id', updateDeliveryStatus);
+
+// ↩️ Returns
+router.get('/returns', getReturns);
+router.put('/returns/:id', approveReturn);
+
+// 💸 Refunds
+router.get('/refunds', getRefundRequests);
+router.put('/refunds/:id', approveRefund);
+
+// 📊 Dashboard Stats
+router.get('/stats', getAdminStats);
 
 export default router;
