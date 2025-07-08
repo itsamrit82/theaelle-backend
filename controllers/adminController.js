@@ -1,4 +1,3 @@
-// File: Server/controllers/adminController.js
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 
@@ -109,14 +108,10 @@ export const updateDeliveryStatus = async (req, res) => {
     res.status(500).json({ error: 'Failed to update delivery status' });
   }
 };
+
 export const getAdminStats = async (req, res) => {
   try {
-    // Dummy response for now — replace with real DB stats later
-    res.json({
-      totalUsers: 123,
-      totalOrders: 56,
-      totalRevenue: 78900,
-    });
+    res.json({ totalUsers: 123, totalOrders: 56, totalRevenue: 78900 });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch stats' });
