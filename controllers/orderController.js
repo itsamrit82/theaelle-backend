@@ -81,6 +81,29 @@ export const createRazorpayOrder = async (req, res) => {
     res.status(500).json({ error: 'Failed to create Razorpay order' });
   }
 };
+export const generateInvoice = async (req, res) => {
+  try {
+    const order = await Order.findOne({ 
+      _id: req.params.id, 
+      user: req.user._id || req.user.id 
+    }).populate('items.productId');
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    await sendInvoiceEmail(order.shippingAddress.email, order);
+
+    res.json({
+      success: true,
+      message: 'Invoice sent to your email'
+    });
+
+  } catch (error) {
+    console.error('Generate invoice error:', error);
+    res.status(500).json({ error: 'Failed to generate invoice' });
+  }
+};
 
 export const verifyPayment = async (req, res) => {
   const { orderId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
