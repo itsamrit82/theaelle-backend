@@ -1,3 +1,6 @@
+// =======================
+// ✅ Full Order Controller with All Functions
+// =======================
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import { sendOrderConfirmationEmail, sendInvoiceEmail } from '../services/emailService.js';
@@ -81,29 +84,6 @@ export const createRazorpayOrder = async (req, res) => {
     res.status(500).json({ error: 'Failed to create Razorpay order' });
   }
 };
-export const generateInvoice = async (req, res) => {
-  try {
-    const order = await Order.findOne({ 
-      _id: req.params.id, 
-      user: req.user._id || req.user.id 
-    }).populate('items.productId');
-
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
-    await sendInvoiceEmail(order.shippingAddress.email, order);
-
-    res.json({
-      success: true,
-      message: 'Invoice sent to your email'
-    });
-
-  } catch (error) {
-    console.error('Generate invoice error:', error);
-    res.status(500).json({ error: 'Failed to generate invoice' });
-  }
-};
 
 export const verifyPayment = async (req, res) => {
   const { orderId, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
@@ -140,5 +120,133 @@ export const verifyPayment = async (req, res) => {
   } catch (error) {
     console.error('Payment verification error:', error);
     res.status(500).json({ error: 'Payment verification failed' });
+  }
+};
+
+export const placeOrder = async (req, res) => {
+  const { items, shippingAddress, totalAmount, shippingCost, tax, finalAmount, notes } = req.body;
+  try {
+    const estimatedDelivery = new Date();
+    estimatedDelivery.setDate(estimatedDelivery.getDate() + 10);
+    const order = await Order.create({
+      user: req.user._id || req.user.id,
+      items,
+      shippingAddress,
+      paymentDetails: {
+        method: 'COD',
+        paymentStatus: 'pending'
+      },
+      totalAmount,
+      shippingCost: shippingCost || 0,
+      tax: tax || 0,
+      finalAmount,
+      estimatedDelivery,
+      notes: notes || '',
+      orderStatus: 'pending'
+    });
+    console.log(`COD Order placed: ${order.orderNumber}`);
+    try {
+      await sendOrderConfirmationEmail(order.shippingAddress.email, {
+        orderNumber: order.orderNumber,
+        finalAmount: order.finalAmount,
+        paymentDetails: order.paymentDetails,
+        items: order.items,
+        estimatedDelivery: order.estimatedDelivery,
+        shippingAddress: order.shippingAddress
+      });
+      await sendInvoiceEmail(order.shippingAddress.email, order);
+    } catch (emailError) {
+      console.log('⚠️ Email sending failed:', emailError.message);
+    }
+    res.status(201).json({ success: true, message: 'Order placed successfully', order });
+  } catch (error) {
+    console.error('Place order error:', error);
+    res.status(500).json({ error: 'Failed to place order' });
+  }
+};
+
+export const getUserOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user._id || req.user.id }).sort({ createdAt: -1 });
+    res.json({ success: true, orders });
+  } catch (error) {
+    console.error('Get user orders error:', error);
+    res.status(500).json({ error: 'Failed to fetch user orders' });
+  }
+};
+
+export const getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate('items.productId');
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    res.json({ success: true, order });
+  } catch (error) {
+    console.error('Get order by ID error:', error);
+    res.status(500).json({ error: 'Failed to fetch order' });
+  }
+};
+
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const order = await Order.findByIdAndUpdate(req.params.id, { orderStatus: req.body.status }, { new: true });
+    res.json({ success: true, order });
+  } catch (error) {
+    console.error('Update order status error:', error);
+    res.status(500).json({ error: 'Failed to update order status' });
+  }
+};
+
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find().populate('user');
+    res.json({ success: true, orders });
+  } catch (error) {
+    console.error('Get all orders error:', error);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+};
+
+export const getOrderStats = async (req, res) => {
+  try {
+    const totalOrders = await Order.countDocuments();
+    const totalRevenueData = await Order.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$finalAmount" }
+        }
+      }
+    ]);
+    const totalRevenue = totalRevenueData[0]?.totalRevenue || 0;
+    res.json({ success: true, stats: { totalOrders, totalRevenue } });
+  } catch (error) {
+    console.error('Get order stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch order stats' });
+  }
+};
+
+export const generateInvoice = async (req, res) => {
+  try {
+    const order = await Order.findOne({ 
+      _id: req.params.id, 
+      user: req.user._id || req.user.id 
+    }).populate('items.productId');
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    await sendInvoiceEmail(order.shippingAddress.email, order);
+
+    res.json({
+      success: true,
+      message: 'Invoice sent to your email'
+    });
+
+  } catch (error) {
+    console.error('Generate invoice error:', error);
+    res.status(500).json({ error: 'Failed to generate invoice' });
   }
 };
