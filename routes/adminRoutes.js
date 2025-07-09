@@ -1,7 +1,10 @@
-// File: routes/adminRoutes.js
+// ================================
+// ✅ FIXED: adminRoutes.js
+// ================================
 import express from 'express';
 import adminMiddleware from '../middleware/adminMiddleware.js';
 import {
+  adminLogin,
   getAllOrders,
   updateOrderStatus,
   getAllProducts,
@@ -19,7 +22,10 @@ import {
 
 const router = express.Router();
 
-// 🔐 Apply admin protection to all routes
+// ✅ Public route: Admin Login (MUST come before middleware)
+router.post('/login', adminLogin);
+
+// ✅ All routes below are protected
 router.use(adminMiddleware);
 
 // 📦 Products
