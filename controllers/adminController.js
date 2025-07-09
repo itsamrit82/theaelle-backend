@@ -1,18 +1,51 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import User from '../models/User.js';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
-// 🧾 All Orders
+// ✅ Admin Login
+export const adminLogin = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user || user.role !== 'admin') {
+      return res.status(401).json({ error: 'Invalid credentials or not an admin' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '7d'
+    });
+
+    res.json({
+      token,
+      admin: {
+        _id: user._id,
+        email: user.email,
+        name: user.name
+      }
+    });
+  } catch (err) {
+    console.error('Admin login error:', err);
+    res.status(500).json({ error: 'Login failed' });
+  }
+};
+
+// ✅ Get All Orders
 export const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate('user').populate('items.productId');
-    res.json({ success: true, orders });
+    const orders = await Order.find().populate('user');
+    res.json(orders);
   } catch (err) {
-    console.error('getAllOrders error:', err);
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
 };
 
-// 🧾 Update Order Status
+// ✅ Update Order Status
 export const updateOrderStatus = async (req, res) => {
   try {
     const order = await Order.findByIdAndUpdate(
@@ -20,53 +53,48 @@ export const updateOrderStatus = async (req, res) => {
       { orderStatus: req.body.status },
       { new: true }
     );
-    res.json({ success: true, order });
+    res.json(order);
   } catch (err) {
-    console.error('updateOrderStatus error:', err);
     res.status(500).json({ error: 'Failed to update order status' });
   }
 };
 
-// 📦 All Products
+// ✅ Get All Products
 export const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
-    res.json({ success: true, products });
+    const products = await Product.find();
+    res.json(products);
   } catch (err) {
-    console.error('getAllProducts error:', err);
     res.status(500).json({ error: 'Failed to fetch products' });
   }
 };
 
-// 🛠️ Update Product
+// ✅ Update Product
 export const updateProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json({ success: true, product });
+    res.json(product);
   } catch (err) {
-    console.error('updateProduct error:', err);
     res.status(500).json({ error: 'Failed to update product' });
   }
 };
 
-// 🗑️ Delete Product
+// ✅ Delete Product
 export const deleteProduct = async (req, res) => {
   try {
     await Product.findByIdAndDelete(req.params.id);
-    res.json({ success: true, message: 'Product deleted' });
+    res.json({ success: true });
   } catch (err) {
-    console.error('deleteProduct error:', err);
     res.status(500).json({ error: 'Failed to delete product' });
   }
 };
 
-// 💸 Refund Requests
+// ✅ Get Refund Requests
 export const getRefundRequests = async (req, res) => {
   try {
     const orders = await Order.find({ refundRequested: true });
-    res.json({ success: true, orders });
+    res.json(orders);
   } catch (err) {
-    console.error('getRefundRequests error:', err);
     res.status(500).json({ error: 'Failed to fetch refunds' });
   }
 };
@@ -79,20 +107,18 @@ export const approveRefund = async (req, res) => {
       { refundApproved: true },
       { new: true }
     );
-    res.json({ success: true, order });
+    res.json(order);
   } catch (err) {
-    console.error('approveRefund error:', err);
     res.status(500).json({ error: 'Failed to approve refund' });
   }
 };
 
-// ↩️ Return Requests
+// ✅ Get Return Requests
 export const getReturns = async (req, res) => {
   try {
     const orders = await Order.find({ returnRequested: true });
-    res.json({ success: true, orders });
+    res.json(orders);
   } catch (err) {
-    console.error('getReturns error:', err);
     res.status(500).json({ error: 'Failed to fetch returns' });
   }
 };
@@ -105,36 +131,35 @@ export const approveReturn = async (req, res) => {
       { returnApproved: true },
       { new: true }
     );
-    res.json({ success: true, order });
+    res.json(order);
   } catch (err) {
-    console.error('approveReturn error:', err);
     res.status(500).json({ error: 'Failed to approve return' });
   }
 };
 
-// 💰 Payments Overview
+// ✅ Get Payments (summary)
 export const getPayments = async (req, res) => {
   try {
-    const payments = await Order.find().select('user finalAmount orderStatus paymentDetails createdAt');
-    res.json({ success: true, payments });
+    const payments = await Order.find().select(
+      'user totalAmount finalAmount paymentDetails paymentStatus orderStatus createdAt'
+    ).populate('user');
+    res.json(payments);
   } catch (err) {
-    console.error('getPayments error:', err);
     res.status(500).json({ error: 'Failed to fetch payments' });
   }
 };
 
-// 🚚 Delivery Overview
+// ✅ Get Deliveries
 export const getDeliveries = async (req, res) => {
   try {
-    const deliveries = await Order.find().select('user orderStatus deliveryStatus');
-    res.json({ success: true, deliveries });
+    const deliveries = await Order.find().select('user orderStatus deliveryStatus').populate('user');
+    res.json(deliveries);
   } catch (err) {
-    console.error('getDeliveries error:', err);
     res.status(500).json({ error: 'Failed to fetch deliveries' });
   }
 };
 
-// 🚚 Update Delivery Status
+// ✅ Update Delivery Status
 export const updateDeliveryStatus = async (req, res) => {
   try {
     const order = await Order.findByIdAndUpdate(
@@ -142,30 +167,32 @@ export const updateDeliveryStatus = async (req, res) => {
       { deliveryStatus: req.body.status },
       { new: true }
     );
-    res.json({ success: true, order });
+    res.json(order);
   } catch (err) {
-    console.error('updateDeliveryStatus error:', err);
     res.status(500).json({ error: 'Failed to update delivery status' });
   }
 };
 
-// 📊 Dashboard Stats (dummy - can replace with real queries)
+// ✅ Dashboard Stats
 export const getAdminStats = async (req, res) => {
   try {
+    const totalUsers = await User.countDocuments();
     const totalOrders = await Order.countDocuments();
     const totalRevenue = await Order.aggregate([
-      { $group: { _id: null, total: { $sum: '$finalAmount' } } }
-    ]);
-    res.json({
-      success: true,
-      stats: {
-        totalUsers: 0, // update later
-        totalOrders,
-        totalRevenue: totalRevenue[0]?.total || 0
+      {
+        $group: {
+          _id: null,
+          revenue: { $sum: '$finalAmount' }
+        }
       }
+    ]);
+
+    res.json({
+      totalUsers,
+      totalOrders,
+      totalRevenue: totalRevenue[0]?.revenue || 0
     });
   } catch (err) {
-    console.error('getAdminStats error:', err);
-    res.status(500).json({ error: 'Failed to fetch stats' });
+    res.status(500).json({ error: 'Failed to fetch dashboard stats' });
   }
 };
