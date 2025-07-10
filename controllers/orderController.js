@@ -124,15 +124,31 @@ export const verifyPayment = async (req, res) => {
 };
 
 export const placeOrder = async (req, res) => {
-  const { items, shippingAddress, totalAmount, shippingCost, tax, finalAmount, notes } = req.body;
+  const { items, shippingAddress, totalAmount, shippingCost, tax, finalAmount, notes, paymentDetails } = req.body;
   try {
+    // Debug log incoming payload
+    console.log('Incoming order payload:', JSON.stringify(req.body, null, 2));
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'No items in order' });
+    }
+    for (const item of items) {
+      if (!item.productId || !item.title || !item.price || !item.quantity) {
+        return res.status(400).json({ error: 'Missing item fields (productId, title, price, quantity)'});
+      }
+    }
+    const requiredFields = ['fullName', 'email', 'phone', 'address', 'city', 'state', 'zipCode'];
+    for (const field of requiredFields) {
+      if (!shippingAddress[field]) {
+        return res.status(400).json({ error: `${field} is required in shipping address` });
+      }
+    }
     const estimatedDelivery = new Date();
     estimatedDelivery.setDate(estimatedDelivery.getDate() + 10);
     const order = await Order.create({
       user: req.user._id || req.user.id,
       items,
       shippingAddress,
-      paymentDetails: {
+      paymentDetails: paymentDetails || {
         method: 'COD',
         paymentStatus: 'pending'
       },
@@ -161,7 +177,7 @@ export const placeOrder = async (req, res) => {
     res.status(201).json({ success: true, message: 'Order placed successfully', order });
   } catch (error) {
     console.error('Place order error:', error);
-    res.status(500).json({ error: 'Failed to place order' });
+    res.status(500).json({ error: error.message || 'Failed to place order' });
   }
 };
 
