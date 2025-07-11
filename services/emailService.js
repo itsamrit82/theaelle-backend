@@ -24,7 +24,7 @@ export const sendVerificationEmail = async (email, verificationUrl) => {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
             <h1 style="color: #f1005d; margin: 0;">The Aellè</h1>
-            <p style="color: #666; margin: 5px 0;">Fashion & Style</p>
+            <p style="color: #666; margin: 5px 0;">Own Your Edge</p>
           </div>
           
           <h2 style="color: #333;">Verify Your Email Address</h2>
@@ -77,7 +77,7 @@ export const sendWelcomeEmail = async (email, userName) => {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
             <h1 style="color: #f1005d; margin: 0;">The Aellè</h1>
-            <p style="color: #666; margin: 5px 0;">Fashion & Style</p>
+            <p style="color: #666; margin: 5px 0;">Own Your Edge</p>
           </div>
           
           <h2 style="color: #333;">Welcome, ${userName}! 🎉</h2>
@@ -131,7 +131,7 @@ export const sendPasswordResetEmail = async (email, resetUrl) => {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
             <h1 style="color: #f1005d; margin: 0;">The Aellè</h1>
-            <p style="color: #666; margin: 5px 0;">Fashion & Style</p>
+            <p style="color: #666; margin: 5px 0;">Own Your Edge</p>
           </div>
           
           <h2 style="color: #333;">Reset Your Password</h2>
@@ -195,7 +195,7 @@ export const sendOrderConfirmationEmail = async (email, orderDetails) => {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
             <h1 style="color: #f1005d; margin: 0;">The Aellè</h1>
-            <p style="color: #666; margin: 5px 0;">Fashion & Style</p>
+            <p style="color: #666; margin: 5px 0;">Own Your Edge</p>
           </div>
           
           <h2 style="color: #333;">Order Confirmed! 🎉</h2>
@@ -221,7 +221,7 @@ export const sendOrderConfirmationEmail = async (email, orderDetails) => {
           </p>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="https://theaelle.store/user/dashboard" style="background: #f1005d; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
+            <a href="https://theaelle.store/user/dashboard/orders" style="background: #f1005d; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
               Track Your Order
             </a>
           </div>
@@ -268,7 +268,7 @@ export const sendInvoiceEmail = async (email, order) => {
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #f1005d; padding-bottom: 20px;">
             <div>
               <h1 style="color: #f1005d; margin: 0;">The Aellè</h1>
-              <p style="color: #666; margin: 5px 0;">Fashion & Style</p>
+              <p style="color: #666; margin: 5px 0;">Own Your Edge</p>
             </div>
             <div style="text-align: right;">
               <h2 style="color: #333; margin: 0;">INVOICE</h2>
