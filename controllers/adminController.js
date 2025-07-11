@@ -2,7 +2,7 @@ import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 // ✅ Admin Login
 export const adminLogin = async (req, res) => {
@@ -26,8 +26,7 @@ export const adminLogin = async (req, res) => {
       admin: {
         _id: user._id,
         email: user.email,
-        name: user.name,
-        role: user.role 
+        name: user.name
       }
     });
   } catch (err) {
